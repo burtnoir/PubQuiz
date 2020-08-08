@@ -6,27 +6,27 @@
 {% for i, question in enumerate(questions) %}
 <div class="question">
 {% if question['score'] == 1 %}
-<span class="score">{{ question['score'] }} point</span>
+    <span class="score">{{ question.score }} point</span>
 {% else %}
-<span class="score">{{ question['score'] }} points</span>
+    <span class="score">{{ question.score }} points</span>
 {% endif %}
 <h3>Question {{ i+1 }}</h3>
-{{ question['question']|safe }}<br>
+{{ question.question|safe }}<br>
 
-{% if question['type'] == 'entry' %}
+{% if question.type == 'entry' %}
 
-<input type="text" size="30" name="ans_{{i+1}}" id="ans_{{i+1}}" class="answer"
-{% if i+1 in answers %}
-value="{{ answers[i+1] }}"
-{% endif %}
->
+    <input type="text" size="30" name="ans_{{i+1}}" id="ans_{{i+1}}" class="answer"
+    {% if i+1 in answers %}
+        value="{{ answers[i+1] }}"
+    {% endif %}
+    >
 
-{% elif question['type'] == 'choice' %}
+{% elif question.type == 'choice' %}
 
 {% for choice in question['choices'].split(',') %}
 <input type="radio" name="ans_{{i+1}}" id="ans_{{i+1}}_{{choice}}" class="answer" value="{{choice}}"
 {% if i+1 in answers and answers[i+1] == choice %}
-selected
+    selected
 {% endif %}
 >
 <label for="ans_{{i+1}}_{{choice}}">{{choice}}</label><br>

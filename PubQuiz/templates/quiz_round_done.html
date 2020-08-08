@@ -1,0 +1,45 @@
+{% extends "quiz.html" %}
+
+{% block content %}
+
+<h2>Round {{ r_num }} Answers</h2>
+{% for question in questions %}
+	<div class="question">
+	{% if question.score == 1 %}
+		<span class="score">{{ question.score }} point</span>
+	{% else %}
+		<span class="score">{{ question.score }} points</span>
+	{% endif %}
+	<h3>Question {{ question.q_num }}</h3>
+	<strong>Q:</strong> {{ question.question|safe }}<br>
+	<div hidden class="answer"><!-- Triggers quiz page update due to new number of 'answer' elements --></div>
+
+	{% if state.done == 2 %}
+
+		<strong>A:</strong> <em>{{ question.first_answer|safe }}</em><br>
+		{% for response in question.responses %}
+			{% if response.name == name %}
+				<div class="final_answer me">
+			{% else %}
+				<div class="final_answer">
+			{% endif %}
+			<h4>{{ response.name }}</h4>
+			<span>{{ response.answer }}</span>
+			{% if response.score == question.score %}
+				<span class="score good">
+			{% elif response.score == 0 %}
+				<span class="score bad">
+			{% else %}
+				<span class="score">
+			{% endif %}
+			{{ response.score }}/{{ question.score }}</span>
+			</div>
+		{% endfor %}
+		<div hidden class="answer"><!-- Triggers quiz page update due to new number of 'answer' elements --></div>
+
+	{% endif %}
+
+	</div>
+{% endfor %}
+
+{% endblock %}
