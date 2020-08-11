@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h2>Round {{ r_num }} Answers</h2>
+<h2>Answers - Round {{ quiz_round.r_num }}: {{ quiz_round.description}}</h2>
 {% for question in questions %}
 	<div class="question">
 	{% if question.score == 1 %}

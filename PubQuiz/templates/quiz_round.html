@@ -2,39 +2,39 @@
 
 {% block content %}
 
-<h2>Round {{ r_num }}</h2>
+<h2>Questions - Round {{ quiz_round.r_num }}: {{ quiz_round.description}}</h2>
 {% for i, question in enumerate(questions) %}
-<div class="question">
-{% if question['score'] == 1 %}
-    <span class="score">{{ question.score }} point</span>
-{% else %}
-    <span class="score">{{ question.score }} points</span>
-{% endif %}
-<h3>Question {{ i+1 }}</h3>
-{{ question.question|safe }}<br>
-
-{% if question.type == 'entry' %}
-
-    <input type="text" size="30" name="ans_{{i+1}}" id="ans_{{i+1}}" class="answer"
-    {% if i+1 in answers %}
-        value="{{ answers[i+1] }}"
+    <div class="question">
+    {% if question.score == 1 %}
+        <span class="score">{{ question.score }} point</span>
+    {% else %}
+        <span class="score">{{ question.score }} points</span>
     {% endif %}
-    >
+    <h3>Question {{ question.q_num }}</h3>
+    {{ question.question|safe }}<br>
 
-{% elif question.type == 'choice' %}
+    {% if question.type == 'entry' %}
 
-{% for choice in question['choices'].split(',') %}
-<input type="radio" name="ans_{{i+1}}" id="ans_{{i+1}}_{{choice}}" class="answer" value="{{choice}}"
-{% if i+1 in answers and answers[i+1] == choice %}
-    selected
-{% endif %}
->
-<label for="ans_{{i+1}}_{{choice}}">{{choice}}</label><br>
-{% endfor %}
+        <input type="text" size="30" name="ans_{{i+1}}" id="ans_{{i+1}}" class="answer"
+        {% if i+1 in answers %}
+            value="{{ answers[i+1] }}"
+        {% endif %}
+        >
 
-{% endif %}
+    {% elif question.type == 'choice' %}
 
-</div>
+        {% for choice in question['choices'].split(',') %}
+            <input type="radio" name="ans_{{i+1}}" id="ans_{{i+1}}_{{choice}}" class="answer" value="{{choice}}"
+            {% if i+1 in answers and answers[i+1] == choice %}
+                selected
+            {% endif %}
+            >
+            <label for="ans_{{i+1}}_{{choice}}">{{choice}}</label><br>
+        {% endfor %}
+
+    {% endif %}
+
+    </div>
 {% endfor %}
 
 {% endblock %}

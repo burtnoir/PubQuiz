@@ -12,8 +12,9 @@
 		</form>
 
 		{% if question != None %}
-		<strong>Q:</strong> {{ question['question']|safe }}<br>
-		<strong>A:</strong> {{ question['answer'] }}<br><br>
+			<h3>Round {{ question.round.r_num}}: {{ question.round.description }}</h3>
+			<p><strong>Q:</strong> {{ question.question|safe }}</p>
+			<p><strong>A:</strong> {{ question.answer }}</p>
 		{% endif %}
 
 		{% if responses != None %}
@@ -21,10 +22,10 @@
 			<table>
 				<tr><th>Name</th><th>Answer</th><th>Score</th></tr>
 				{% for response in responses %}
-				<tr>
-					<td>{{ response['name'] }}</td> <td>{{ response['answer'] }}</td>
-					<td><input type="number" size=2 name="resp_{{ response['name'] }}" value={{ response['score'] }} min=0 max={{ question['score'] }} step=1></td>
-				</tr>
+					<tr>
+						<td>{{ response.player.name }}</td> <td>{{ response.answer }}</td>
+						<td><input type="number" size=2 name="resp_{{ response['name'] }}" value={{ response.score }} min=0 max={{ question.score }} step=1></td>
+					</tr>
 				{% endfor %}
 			</table>
 			<input type="submit" name="update_scores" value="Update scores">

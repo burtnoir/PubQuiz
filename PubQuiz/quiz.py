@@ -4,7 +4,7 @@ from functools import wraps
 from flask import Blueprint, render_template, request, session, abort, redirect, current_app, url_for
 from sqlalchemy import and_
 
-from PubQuiz.models import Player, Questions, Response, State
+from PubQuiz.models import Player, Questions, Response, State, Round
 from . import db
 
 quiz = Blueprint('quiz', __name__)
@@ -56,6 +56,7 @@ def quiz_view():
     if r_num == 0:  # Quiz not started
         return render_template('quiz_not_started.html', players=players, name=name, now_time=now_time)
 
+    quiz_round = Round.query.filter(Round.r_num == r_num).one()
     questions = Questions.query.filter(and_(Questions.r_num == r_num, Questions.q_num <= q_num)).order_by(
         Questions.q_num).all()
     for question in questions:
@@ -66,11 +67,11 @@ def quiz_view():
         answers = {}
         for r in responses:
             answers[r.q_num] = r.answer
-        return render_template('quiz_round.html', players=players, name=name, now_time=now_time, r_num=r_num,
+        return render_template('quiz_round.html', players=players, name=name, now_time=now_time, quiz_round=quiz_round,
                                questions=questions, answers=answers, enumerate=enumerate)
     else:  # Completed round
-        return render_template('quiz_round_done.html', players=players, name=name, now_time=now_time, r_num=r_num,
-                               questions=questions, state=state)
+        return render_template('quiz_round_done.html', players=players, name=name, now_time=now_time,
+                               quiz_round=quiz_round, questions=questions, state=state)
 
 
 @quiz.route('/quiz_endpoint', methods=['POST'])
@@ -312,17 +313,24 @@ def upload_questions():
     return render_template('upload_questions.html', success=success, questions=questions)
 
 
-@quiz.route('/login', methods=['GET', 'POST'])
-def login():
+@quiz.route('/login', methods=['GET'])
+def login_start():
+    """
+    The caller wants to see the login page.
+    :return:
+    """
+    if request.method == 'GET':
+        return render_template('login.html')
+
+
+@quiz.route('/login', methods=['POST'])
+def login_user():
     """
     Used to log a user in.  If they are not recognised or they've been away too long they will be
     created in the database.  No strict logins with authentication for this application as yet.
     It's just trying to get some players and run a quiz.
     :return:
     """
-    # The caller wants to see the login page.
-    if request.method == 'GET':
-        return render_template('login.html')
 
     # The caller is sending a login request.
     if request.method == 'POST' and 'name' in request.form:
@@ -360,4 +368,4 @@ def main():
 
         return render_template('main.html', name=session['name'])
 
-    return redirect(url_for('quiz.login'))
+    return redirect(url_for('quiz.login_start'))
