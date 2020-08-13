@@ -5,14 +5,6 @@ from sqlalchemy.orm import column_property
 from . import db
 
 
-class Round(db.Model):
-    __tablename__ = 'rounds'
-    id = db.Column(db.Integer, primary_key=True)
-    questions = db.relationship("Questions", back_populates="round")
-    r_num = db.Column(db.Integer, nullable=False)
-    description = db.Column(db.Text, nullable=False)
-
-
 class Questions(db.Model):
     __tablename__ = 'questions'
     id = db.Column(db.Integer, primary_key=True)
@@ -28,6 +20,14 @@ class Questions(db.Model):
     score = db.Column(db.Integer, nullable=False)
 
     responses = db.relationship("Response", back_populates="question")
+
+
+class Round(db.Model):
+    __tablename__ = 'rounds'
+    id = db.Column(db.Integer, primary_key=True)
+    questions = db.relationship("Questions", back_populates="round", order_by=Questions.q_num)
+    r_num = db.Column(db.Integer, nullable=False)
+    description = db.Column(db.Text, nullable=False)
 
 
 class Response(db.Model):

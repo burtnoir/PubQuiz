@@ -1,7 +1,7 @@
 import time
 from functools import wraps
 
-from flask import Blueprint, render_template, request, session, abort, redirect, current_app, url_for
+from flask import Blueprint, render_template, request, session, abort, redirect, current_app, url_for, flash
 from sqlalchemy import and_
 
 from PubQuiz.models import Player, Questions, Response, State, Round
@@ -248,21 +248,28 @@ def import_questions_from_stream(stream):
     :param stream:
     :return:
     """
+    # TODO It might be nice to offer the ability to append new questions.
+    # Clear down the existing questions before uploading new ones.
     db.session.execute('DELETE FROM questions')
+    db.session.execute('DELETE FROM rounds')
     try:
         r_num = None
         q_num = None
+        quiz_round = None
         for line in stream:
             line = line.decode("utf-8")[:-1]
+            line_elements = line.split(',')
             if line.lower().startswith('round'):
                 # New round
-                r_num = int(line.split(',')[0][5:])
+                r_num = int(line_elements[0][5:])
                 q_num = 1
+                quiz_round = Round(r_num=r_num, description=line_elements[1])
+                db.session.add(quiz_round)
+                db.session.commit()
                 continue
             elif r_num is None:
                 # No rounds started => Ignore line
                 continue
-            line_elements = line.split(',')
             q_type = line_elements[0]
             q_score = line_elements[1]
             q_text = line_elements[2]
@@ -279,7 +286,8 @@ def import_questions_from_stream(stream):
 
             q_answer = filter_string(q_answer)
 
-            question = Questions(r_num=r_num, q_num=q_num, question=q_text, answer=q_answer, score=q_score)
+            question = Questions(round_id=quiz_round.id, r_num=quiz_round.r_num, q_num=q_num, question=q_text,
+                                 answer=q_answer, score=q_score)
             if q_type.lower() == 'entry':
                 question.type = q_type.lower()
             elif q_type.lower() == 'choice':
@@ -289,9 +297,16 @@ def import_questions_from_stream(stream):
                 # If the question type is unrecognised then bail out of the import.
                 raise RuntimeError('Unrecognized question type')
             db.session.add(question)
+            db.session.commit()
             q_num += 1
 
+        # Reset the game state now we have new questions.
+        state = State.query.first()
+        state.r_num = 0
+        state.q_num = 0
+        state.done = 0
         db.session.commit()
+
         return True
 
     except Exception as e:
@@ -303,14 +318,15 @@ def import_questions_from_stream(stream):
 @admin_only
 def upload_questions():
     success = None
-    questions = None
+    quiz_rounds = None
     if 'questions_file' in request.files:
         q_file = request.files['questions_file']
         success = import_questions_from_stream(q_file.stream)
         if success:
-            questions = Questions.query.filter().all()
+            flash('Questions uploaded successfully!', 'success')
+            quiz_rounds = Round.query.order_by(Round.r_num).all()
 
-    return render_template('upload_questions.html', success=success, questions=questions)
+    return render_template('upload_questions.html', success=success, quiz_rounds=quiz_rounds)
 
 
 @quiz.route('/login', methods=['GET'])

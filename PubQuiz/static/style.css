@@ -15,18 +15,18 @@
 }
 
 body {
-	font-size: 24pt;
+	font-size: 18pt;
 	background-color: #77aacc;
 	padding: 1em;
 }
 
 h1 {
-	font-size: 25pt;
+	font-size: 24pt;
 	text-align: center;
 }
 
 h2 {
-	font-size: 24pt;
+	font-size: 20pt;
 }
 
 @keyframes spin { 100% { transform:rotate(360deg); } }
@@ -98,7 +98,7 @@ div.player_list ul li span.score {
 
 div.question {
 	position: relative;
-	font-size: 24pt;
+	font-size: 20pt;
 	background-color: #bbbbff;
 	padding: 1.5em;
 	border-radius: 0.5em;
@@ -123,7 +123,7 @@ div.question h3 {
 }
 
 *.answer {
-	font-size: 24pt;
+	font-size: 20pt;
 	background-color: #ffffff;
 	color: #000000;
 	padding: 0.5em;
@@ -209,4 +209,27 @@ input[type="submit"], button {
 	border-radius: 0.5em;
 	border: solid 4px #333;
 	margin: 0.1em;
+}
+
+/* Some basic message styling */
+.info, .success, .warning, .error {
+    margin: 10px 0px;
+    padding:12px;
+
+}
+.info {
+    color: #00529B;
+    background-color: #BDE5F8;
+}
+.success {
+    color: #4F8A10;
+    background-color: #DFF2BF;
+}
+.warning {
+    color: #9F6000;
+    background-color: #FEEFB3;
+}
+.error {
+    color: #D8000C;
+    background-color: #FFD2D2;
 }
