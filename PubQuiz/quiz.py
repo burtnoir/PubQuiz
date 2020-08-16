@@ -57,10 +57,11 @@ def quiz_view():
         return render_template('quiz_not_started.html', players=players, name=name, now_time=now_time)
 
     quiz_round = Round.query.filter(Round.r_num == r_num).one()
-    questions = Questions.query.filter(and_(Questions.r_num == r_num, Questions.q_num <= q_num)).order_by(
+    questions = Questions.query.filter(and_(Questions.round.r_num == r_num, Questions.q_num <= q_num)).order_by(
         Questions.q_num).all()
-    for question in questions:
-        question.first_answer = question.answer.split(',')[0]
+
+    # for question in questions:
+    #     question.first_answer = question.answer.split(',')[0]
     responses = Response.query.filter(and_(Response.r_num == r_num, Response.player_id == player.id)).all()
 
     if state.done == 0:  # Active round
@@ -97,7 +98,7 @@ def quiz_endpoint():
             if response is None or response.answer != ans_val:
                 # Auto-score new answer
                 score = 0
-                question = Questions.query.filter(and_(Questions.r_num == r_num, Questions.q_num == q_num)).one()
+                question = Questions.query.filter(and_(Questions.round.r_num == r_num, Questions.q_num == q_num)).one()
                 for right_answer in question.answer.split(','):
                     if ans_val.lower() == right_answer.lower():
                         score = question.score
@@ -134,13 +135,13 @@ def control():
         if request.form.get('next') is not None:
             # Move quiz forward
             next_question = Questions.query.filter(
-                and_(Questions.r_num == round_number, Questions.q_num == question_number + 1)).one_or_none()
+                Questions.q_num == question_number + 1).join(Round).filter(Round.r_num == round_number).one_or_none()
             if done == 1 and question_number > 0:
                 # Reveal answer
                 done = 2
                 # Show response scores
                 responses = Response.query.filter(
-                    and_(Response.r_num <= round_number, Response.q_num <= question_number))
+                    and_(Response.r_num <= round_number, Response.q_num <= question_number)).all()
                 for response in responses:
                     response.hidden = 0
 
@@ -157,8 +158,8 @@ def control():
                     question_number = 0
                 else:
                     # Next round
-                    next_question = Questions.query.filter(
-                        and_(Questions.r_num == round_number + 1, Questions.q_num == 1)).one_or_none()
+                    next_question = Questions.query.filter(Questions.q_num == 1).join(Round).filter(
+                        Round.r_num == round_number + 1).one_or_none()
                     if next_question is not None:
                         round_number += 1
                         question_number = 0
@@ -166,8 +167,8 @@ def control():
 
         elif request.form.get('prev') is not None:
             # Move quiz backwards
-            prev_question = Questions.query.filter(
-                and_(Questions.r_num == round_number, Questions.q_num == question_number - 1)).one_or_none()
+            prev_question = Questions.query.filter(Questions.q_num == question_number - 1).join(Round).filter(
+                Round.r_num == round_number).one_or_none()
             if done == 2:
                 done = 1
             elif prev_question is not None or question_number == 1:
@@ -183,8 +184,8 @@ def control():
             else:
                 if done:
                     # Reopen round
-                    prev_question = Questions.query.filter(Questions.r_num == round_number).order_by(
-                        Questions.q_num.desc()).one()
+                    prev_question = Questions.query.join(Round).filter(Round.r_num == round_number).order_by(
+                        Questions.q_num.desc()).first()
                     done = 0
                     question_number = prev_question.q_num
                 else:
@@ -193,8 +194,8 @@ def control():
                         round_number = 0
                     else:
                         # Back to previous round's answers
-                        prev_question = Questions.query.filter(Questions.r_num == round_number - 1).order_by(
-                            Questions.q_num.desc()).first()
+                        prev_question = Questions.query.join(Round).filter(
+                            Round.r_num == round_number - 1).order_by(Questions.q_num.desc()).first()
                         done = 2
                         round_number -= 1
                         question_number = prev_question.q_num
@@ -202,15 +203,11 @@ def control():
         elif request.form.get('kick_players') is not None:
             db.session.execute('DELETE FROM players')
         elif request.form.get('reset_state') is not None:
-            # db.session.execute('DELETE FROM state')
             round_number = 0
             question_number = 0
             done = 0
-            # No need as these values will be updated after the next block.
-            # cur.execute('INSERT INTO state (r_num) VALUES (0)')
         elif request.form.get('reset_responses') is not None:
             db.session.execute('DELETE FROM responses')
-            # update_scores()
 
         state.r_num = round_number
         state.q_num = question_number
@@ -218,15 +215,15 @@ def control():
         db.session.commit()
 
     if question_number > 0:
-        question = Questions.query.filter(
-            and_(Questions.r_num == round_number, Questions.q_num == question_number)).one()
+        question = Questions.query.filter(Questions.q_num == question_number).join(Round).filter(
+            Round.r_num == round_number).one()
     else:
         question = None
 
     if done and question_number > 0:
         # Show question-scoring tools
         responses = Response.query.filter(
-            and_(Response.r_num == round_number, Response.q_num == question_number)).all()
+            Response.r_num == round_number, Response.q_num == question_number).all()
     else:
         responses = None
 
@@ -237,7 +234,7 @@ def control():
 
         # Update responses so that control page shows the right scores
         responses = Response.query.filter(
-            and_(Response.r_num == round_number, Response.q_num == question_number)).all()
+            Response.r_num == round_number, Response.q_num == question_number).all()
 
     return render_template('control.html', responses=responses, question=question)
 

@@ -25,7 +25,7 @@ class Questions(db.Model):
 class Round(db.Model):
     __tablename__ = 'rounds'
     id = db.Column(db.Integer, primary_key=True)
-    questions = db.relationship("Questions", back_populates="round", order_by=Questions.q_num)
+    questions = db.relationship("Questions", back_populates="round", lazy="joined", order_by=Questions.q_num)
     r_num = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text, nullable=False)
 
