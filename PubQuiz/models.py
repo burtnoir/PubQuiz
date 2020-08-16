@@ -5,31 +5,6 @@ from sqlalchemy.orm import column_property
 from . import db
 
 
-class Questions(db.Model):
-    __tablename__ = 'questions'
-    id = db.Column(db.Integer, primary_key=True)
-    round_id = db.Column(db.Integer, db.ForeignKey('rounds.id'), nullable=False)
-    round = db.relationship("Round", back_populates="questions")
-
-    r_num = db.Column(db.Integer, nullable=False)
-    q_num = db.Column(db.Integer, nullable=False)
-    question = db.Column(db.Text, nullable=False)
-    type = db.Column(db.Text, nullable=False)
-    choices = db.Column(db.Text)
-    answer = db.Column(db.Text, nullable=False)
-    score = db.Column(db.Integer, nullable=False)
-
-    responses = db.relationship("Response", back_populates="question")
-
-
-class Round(db.Model):
-    __tablename__ = 'rounds'
-    id = db.Column(db.Integer, primary_key=True)
-    questions = db.relationship("Questions", back_populates="round", lazy="joined", order_by=Questions.q_num)
-    r_num = db.Column(db.Integer, nullable=False)
-    description = db.Column(db.Text, nullable=False)
-
-
 class Response(db.Model):
     __tablename__ = 'responses'
     id = db.Column(db.Integer, primary_key=True)
@@ -44,6 +19,30 @@ class Response(db.Model):
     hidden = db.Column(db.Integer, nullable=False)
     question = db.relationship("Questions", back_populates="responses")
     player = db.relationship("Player", back_populates="responses")
+
+
+class Questions(db.Model):
+    __tablename__ = 'questions'
+    id = db.Column(db.Integer, primary_key=True)
+    round_id = db.Column(db.Integer, db.ForeignKey('rounds.id'), nullable=False)
+    round = db.relationship("Round", back_populates="questions")
+
+    q_num = db.Column(db.Integer, nullable=False)
+    question = db.Column(db.Text, nullable=False)
+    type = db.Column(db.Text, nullable=False)
+    choices = db.Column(db.Text)
+    answer = db.Column(db.Text, nullable=False)
+    score = db.Column(db.Integer, nullable=False)
+
+    responses = db.relationship("Response", back_populates="question", order_by=Response.name)
+
+
+class Round(db.Model):
+    __tablename__ = 'rounds'
+    id = db.Column(db.Integer, primary_key=True)
+    questions = db.relationship("Questions", back_populates="round", lazy="joined", order_by=Questions.q_num)
+    r_num = db.Column(db.Integer, nullable=False)
+    description = db.Column(db.Text, nullable=False)
 
 
 class Player(db.Model):

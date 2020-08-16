@@ -57,7 +57,7 @@ def quiz_view():
         return render_template('quiz_not_started.html', players=players, name=name, now_time=now_time)
 
     quiz_round = Round.query.filter(Round.r_num == r_num).one()
-    questions = Questions.query.filter(and_(Questions.round.r_num == r_num, Questions.q_num <= q_num)).order_by(
+    questions = Questions.query.filter(Questions.q_num <= q_num).join(Round).filter(Round.r_num == r_num).order_by(
         Questions.q_num).all()
 
     # for question in questions:
@@ -114,6 +114,41 @@ def quiz_endpoint():
                     response.score = score
                 db.session.commit()
     return 'ok'
+
+
+@quiz.route('/kick_players', methods=['POST'])
+@admin_only
+def kick_players():
+    state = State.query.filter().one()
+    db.session.execute('DELETE FROM players')
+    db.session.commit()
+    flash('Players Deleted', 'success')
+    question, responses = get_question_and_response(state.done, state.q_num, state.r_num)
+    return render_template('control.html', responses=responses, question=question)
+
+
+@quiz.route('/reset_state', methods=['POST'])
+@admin_only
+def reset_state():
+    state = State.query.filter().one()
+    state.r_num = 0
+    state.q_num = 0
+    state.done = 0
+    db.session.commit()
+    flash('State Reset', 'success')
+    question, responses = get_question_and_response(state.done, state.q_num, state.r_num)
+    return render_template('control.html', responses=responses, question=question)
+
+
+@quiz.route('/reset_responses', methods=['POST'])
+@admin_only
+def reset_responses():
+    state = State.query.filter().one()
+    db.session.execute('DELETE FROM responses')
+    db.session.commit()
+    flash('Responses Reset', 'success')
+    question, responses = get_question_and_response(state.done, state.q_num, state.r_num)
+    return render_template('control.html', responses=responses, question=question)
 
 
 @quiz.route('/control', methods=['GET', 'POST'])
@@ -200,32 +235,12 @@ def control():
                         round_number -= 1
                         question_number = prev_question.q_num
 
-        elif request.form.get('kick_players') is not None:
-            db.session.execute('DELETE FROM players')
-        elif request.form.get('reset_state') is not None:
-            round_number = 0
-            question_number = 0
-            done = 0
-        elif request.form.get('reset_responses') is not None:
-            db.session.execute('DELETE FROM responses')
-
         state.r_num = round_number
         state.q_num = question_number
         state.done = done
         db.session.commit()
 
-    if question_number > 0:
-        question = Questions.query.filter(Questions.q_num == question_number).join(Round).filter(
-            Round.r_num == round_number).one()
-    else:
-        question = None
-
-    if done and question_number > 0:
-        # Show question-scoring tools
-        responses = Response.query.filter(
-            Response.r_num == round_number, Response.q_num == question_number).all()
-    else:
-        responses = None
+    question, responses = get_question_and_response(done, question_number, round_number)
 
     if request.method == 'POST' and request.form.get('update_scores'):
         for response in responses:
@@ -237,6 +252,29 @@ def control():
             Response.r_num == round_number, Response.q_num == question_number).all()
 
     return render_template('control.html', responses=responses, question=question)
+
+
+def get_question_and_response(done, question_number, round_number):
+    """
+    Get the question and response objects given a question number and round number.
+    TODO If we stored the question id then we would not need the round number here.
+    :param done:
+    :param question_number:
+    :param round_number:
+    :return:
+    """
+    if question_number > 0:
+        question = Questions.query.filter(Questions.q_num == question_number).join(Round).filter(
+            Round.r_num == round_number).one()
+    else:
+        question = None
+    if done and question_number > 0:
+        # Show question-scoring tools
+        responses = Response.query.filter(
+            Response.r_num == round_number, Response.q_num == question_number).all()
+    else:
+        responses = None
+    return question, responses
 
 
 def import_questions_from_stream(stream):

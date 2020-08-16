@@ -6,6 +6,14 @@
 	<body>
 		<h1>Pub Quiz</h1>
 
+		{% with messages = get_flashed_messages(with_categories=true) %}
+		  {% if messages %}
+			{% for category, message in messages %}
+			  <div class="{{ category }}">{{ message }}</div>
+			{% endfor %}
+		  {% endif %}
+		{% endwith %}
+
 		<form action='/control' method="POST">
 			<button name="prev">⮜⮜⮜</button>
 			<button name="next">⮞⮞⮞</button>
@@ -32,10 +40,10 @@
 		</form>
 		{% endif %}
 
-		<form action='/control' method="POST">
-			<button name="reset_state">Reset State</button>
-			<button name="reset_responses">Reset Responses</button>
-			<button name="kick_players">Kick Players</button>
+		<form>
+			<button type="submit" formmethod="POST" formaction="/reset_state" name="reset_state">Reset State</button>
+			<button type="submit" formmethod="POST" formaction="/reset_responses" name="reset_responses">Reset Responses</button>
+			<button type="submit" formmethod="POST" formaction="/kick_players" name="kick_players">Kick Players</button>
 		</form>
 	</body>
 </html>
