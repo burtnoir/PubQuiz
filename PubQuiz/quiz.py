@@ -60,8 +60,8 @@ def quiz_view():
     questions = Questions.query.filter(Questions.q_num <= q_num).join(Round).filter(Round.r_num == r_num).order_by(
         Questions.q_num).all()
 
-    # for question in questions:
-    #     question.first_answer = question.answer.split(',')[0]
+    for question in questions:
+        question.first_answer = question.answer.split(',')[0]
     responses = Response.query.filter(and_(Response.r_num == r_num, Response.player_id == player.id)).all()
 
     if state.done == 0:  # Active round

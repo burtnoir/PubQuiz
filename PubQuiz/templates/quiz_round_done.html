@@ -11,10 +11,10 @@
 		<span class="score">{{ question.score }} points</span>
 	{% endif %}
 	<h3>Question {{ question.q_num }}</h3>
-	<strong>Q:</strong> {{ question.question|safe }}<br>
+	<p><strong>Q:</strong> {{ question.question|safe }}</p>
 	<div hidden class="answer"><!-- Triggers quiz page update due to new number of 'answer' elements --></div>
 
-	{% if state.done == 2 %}
+	{% if state.done == 2 or question.q_num < state.q_num %}
 
 		<strong>A:</strong> <em>{{ question.first_answer|safe }}</em><br>
 		{% for response in question.responses %}
