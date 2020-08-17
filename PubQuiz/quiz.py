@@ -174,16 +174,15 @@ def update_scores():
     state = State.query.filter().one()
     question, responses = get_question_and_response(state.done, state.q_num, state.r_num)
 
-    if request.method == 'POST' and request.form.get('update_scores'):
-        for response in responses:
-            response.score = request.form['resp_' + response.name]
-        db.session.commit()
+    for response in responses:
+        response.score = request.form['resp_' + response.name]
+    db.session.commit()
+    flash('Scores Updated', 'success')
 
-        # Update responses so that control page shows the right scores
-        responses = Response.query.filter(
-            Response.r_num == state.r_num, Response.q_num == state.q_num).all()
+    # Update responses so that control page shows the right scores
+    responses = Response.query.filter(Response.r_num == state.r_num, Response.q_num == state.q_num).all()
 
-        return render_template('control.html', responses=responses, question=question)
+    return render_template('control.html', responses=responses, question=question)
 
 
 @quiz.route('/control', methods=['GET', 'POST'])
