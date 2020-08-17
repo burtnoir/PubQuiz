@@ -98,7 +98,8 @@ def quiz_endpoint():
             if response is None or response.answer != ans_val:
                 # Auto-score new answer
                 score = 0
-                question = Questions.query.filter(Questions.q_num == q_num).join(Round).filter(Round.r_num == r_num).one()
+                question = Questions.query.filter(Questions.q_num == q_num).join(Round).filter(
+                    Round.r_num == r_num).one()
                 for right_answer in question.answer.split(','):
                     if ans_val.lower() == right_answer.lower():
                         score = question.score
@@ -119,6 +120,10 @@ def quiz_endpoint():
 @quiz.route('/kick_players', methods=['POST'])
 @admin_only
 def kick_players():
+    """
+    Remove all the players.
+    :return:
+    """
     state = State.query.filter().one()
     db.session.execute('DELETE FROM players')
     db.session.commit()
@@ -130,6 +135,10 @@ def kick_players():
 @quiz.route('/reset_state', methods=['POST'])
 @admin_only
 def reset_state():
+    """
+    Reset the state back to the start of the quiz.
+    :return:
+    """
     state = State.query.filter().one()
     state.r_num = 0
     state.q_num = 0
@@ -143,6 +152,10 @@ def reset_state():
 @quiz.route('/reset_responses', methods=['POST'])
 @admin_only
 def reset_responses():
+    """
+    Clear the responses.
+    :return:
+    """
     state = State.query.filter().one()
     db.session.execute('DELETE FROM responses')
     db.session.commit()
@@ -151,12 +164,34 @@ def reset_responses():
     return render_template('control.html', responses=responses, question=question)
 
 
+@quiz.route('/update_scores', methods=['POST'])
+@admin_only
+def update_scores():
+    """
+    The quiz master has updated the scores so commit the changes to the database and redisplay the screen.
+    :return:
+    """
+    state = State.query.filter().one()
+    question, responses = get_question_and_response(state.done, state.q_num, state.r_num)
+
+    if request.method == 'POST' and request.form.get('update_scores'):
+        for response in responses:
+            response.score = request.form['resp_' + response.name]
+        db.session.commit()
+
+        # Update responses so that control page shows the right scores
+        responses = Response.query.filter(
+            Response.r_num == state.r_num, Response.q_num == state.q_num).all()
+
+        return render_template('control.html', responses=responses, question=question)
+
+
 @quiz.route('/control', methods=['GET', 'POST'])
 @admin_only
 def control():
     """
     Used by the quiz master to administer the quiz.
-    It can be used to reset things or to move the questions backwards and forwards.
+    It can be used to move the questions backwards and forwards.
     :return:
     """
     state = State.query.filter().one()
@@ -241,15 +276,6 @@ def control():
         db.session.commit()
 
     question, responses = get_question_and_response(done, question_number, round_number)
-
-    if request.method == 'POST' and request.form.get('update_scores'):
-        for response in responses:
-            response.score = request.form['resp_' + response.name]
-        db.session.commit()
-
-        # Update responses so that control page shows the right scores
-        responses = Response.query.filter(
-            Response.r_num == round_number, Response.q_num == question_number).all()
 
     return render_template('control.html', responses=responses, question=question)
 

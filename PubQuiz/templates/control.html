@@ -26,18 +26,18 @@
 		{% endif %}
 
 		{% if responses != None %}
-		<form action='/control' method="POST">
-			<table>
-				<tr><th>Name</th><th>Answer</th><th>Score</th></tr>
-				{% for response in responses %}
-					<tr>
-						<td>{{ response.player.name }}</td> <td>{{ response.answer }}</td>
-						<td><input type="number" size=2 name="resp_{{ response['name'] }}" value={{ response.score }} min=0 max={{ question.score }} step=1></td>
-					</tr>
-				{% endfor %}
-			</table>
-			<input type="submit" name="update_scores" value="Update scores">
-		</form>
+			<form action='/update_scores' method="POST">
+				<table>
+					<tr><th>Name</th><th>Answer</th><th>Score</th></tr>
+					{% for response in responses %}
+						<tr>
+							<td>{{ response.player.name }}</td> <td>{{ response.answer }}</td>
+							<td><input type="number" size=2 name="resp_{{ response.name }}" value={{ response.score }} min=0 max={{ question.score }} step=1></td>
+						</tr>
+					{% endfor %}
+				</table>
+				<input type="submit" name="update_scores" value="Update scores">
+			</form>
 		{% endif %}
 
 		<form>

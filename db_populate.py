@@ -52,7 +52,7 @@ rounds = [(1, "The Cold War",
                                'choice',
                                'Sex with minor,Burned a condom,Urinated on the American flag,Streaked through a restaurant',
                                'Burned a condom', 2),
-                              (4, 'Who did Ringo Star voice before his fame?', 'choice',
+                              (4, 'Which children''s TV character did Ringo Star voice?', 'choice',
                                'Blue Peter,Postman Pat,Bob the Builder,Thomas the Tank Engine',
                                'Thomas the Tank Engine', 2)]),
           (4, "The Natural World", [(1, 'Which birds live in open yet very committed relationships?', 'choice',
@@ -66,7 +66,7 @@ rounds = [(1, "The Cold War",
                                      'rats,beetles,snakes,mice', 'mice', 2),
                                     (4, 'What animal did Western explorers initially think Albatross\' were?', 'choice',
                                      'platypus,sheep,pigeon,cat', 'sheep', 2)]),
-          (5, "Miscellaneous", [(1, 'Which film / TV show are these?', 'entry', '', 'wow exciting!', 0),
+          (5, "Miscellaneous", [(1, 'Which film / TV show are these?', 'entry', '', 'wow exciting!', 2),
                                 (2, 'Roman goddess of women and marriage', 'entry', '', 'Juno', 2),
                                 (3, 'Acquaintances', 'entry', '', 'friends', 2),
                                 (4, 'Good weather cream cheese', 'entry', '', 'Always sunny in Philadelphia', 2),
@@ -82,7 +82,7 @@ for r in rounds:
 
     # Go through the questions for this round
     for q in r[2]:
-        question = models.Questions(r_num=quiz_round.r_num, round_id=quiz_round.id, q_num=q[0], question=q[1],
+        question = models.Questions(round_id=quiz_round.id, q_num=q[0], question=q[1],
                                     type=q[2], choices=q[3],
                                     answer=q[4], score=q[5])
         session.add(question)
