@@ -98,7 +98,7 @@ def quiz_endpoint():
             if response is None or response.answer != ans_val:
                 # Auto-score new answer
                 score = 0
-                question = Questions.query.filter(and_(Questions.round.r_num == r_num, Questions.q_num == q_num)).one()
+                question = Questions.query.filter(Questions.q_num == q_num).join(Round).filter(Round.r_num == r_num).one()
                 for right_answer in question.answer.split(','):
                     if ans_val.lower() == right_answer.lower():
                         score = question.score
@@ -136,8 +136,8 @@ def reset_state():
     state.done = 0
     db.session.commit()
     flash('State Reset', 'success')
-    question, responses = get_question_and_response(state.done, state.q_num, state.r_num)
-    return render_template('control.html', responses=responses, question=question)
+    # Back at the start so we are before the question and response stage.
+    return render_template('control.html', responses=None, question=None)
 
 
 @quiz.route('/reset_responses', methods=['POST'])
