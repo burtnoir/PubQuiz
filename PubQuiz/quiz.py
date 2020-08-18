@@ -2,7 +2,6 @@ import time
 from functools import wraps
 
 from flask import Blueprint, render_template, request, session, abort, redirect, current_app, url_for, flash
-from sqlalchemy import and_
 
 from PubQuiz.models import Player, Questions, Response, State, Round
 from . import db
@@ -62,7 +61,9 @@ def quiz_view():
 
     for question in questions:
         question.first_answer = question.answer.split(',')[0]
-    responses = Response.query.filter(and_(Response.r_num == r_num, Response.player_id == player.id)).all()
+
+    responses = Response.query.filter(Response.player_id == player.id).join(Questions).join(Round).filter(
+        Round.r_num == r_num).all()
 
     if state.done == 0:  # Active round
         answers = {}
@@ -91,8 +92,8 @@ def quiz_endpoint():
         if param.startswith('ans_'):
             q_num = int(param[4:])
             ans_val = request.form[param]
-            response = Response.query.filter(
-                and_(Response.r_num == r_num, Response.q_num == q_num, Response.player_id == player.id)).one_or_none()
+            response = Response.query.filter(Response.player_id == player.id).join(Questions).filter(
+                Questions.q_num == q_num).join(Round).filter(Round.r_num == r_num).one_or_none()
 
             # Only update response if it is new
             if response is None or response.answer != ans_val:
@@ -107,8 +108,8 @@ def quiz_endpoint():
 
                 # Commit response
                 if response is None:
-                    response = Response(r_num=r_num, question_id=question.id, q_num=q_num, player_id=player.id,
-                                        name=player.name, answer=ans_val, score=score, hidden=1)
+                    response = Response(question_id=question.id, q_num=q_num, player_id=player.id, name=player.name,
+                                        answer=ans_val, score=score, hidden=1)
                     db.session.add(response)
                 else:
                     response.answer = ans_val
@@ -209,8 +210,8 @@ def control():
                 # Reveal answer
                 done = 2
                 # Show response scores
-                responses = Response.query.filter(
-                    and_(Response.r_num <= round_number, Response.q_num <= question_number)).all()
+                responses = Response.query.join(Questions).filter(Questions.q_num <= question_number).join(
+                    Round).filter(Round.r_num <= round_number).all()
                 for response in responses:
                     response.hidden = 0
 
@@ -295,8 +296,8 @@ def get_question_and_response(done, question_number, round_number):
         question = None
     if done and question_number > 0:
         # Show question-scoring tools
-        responses = Response.query.filter(
-            Response.r_num == round_number, Response.q_num == question_number).all()
+        responses = Response.query.join(Questions).filter(Questions.q_num == question_number).join(Round).filter(
+            Round.r_num == round_number).all()
     else:
         responses = None
     return question, responses

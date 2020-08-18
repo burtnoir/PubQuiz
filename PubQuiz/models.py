@@ -11,7 +11,7 @@ class Response(db.Model):
     question_id = db.Column(db.Integer, db.ForeignKey('questions.id'), nullable=False)
     player_id = db.Column(db.Integer, db.ForeignKey('players.id'), nullable=False)
 
-    r_num = db.Column(db.Integer)
+    # TODO Once we switch to using question id then the q_num can go.
     q_num = db.Column(db.Integer)
     name = db.Column(db.Text)
     answer = db.Column(db.Text, nullable=False)
